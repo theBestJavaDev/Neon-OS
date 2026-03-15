@@ -39,8 +39,16 @@
             }
         }
         #mobile-controls {
-            position: absolute; bottom: 40px; width: 100%; display: none;
-            justify-content: space-between; padding: 0 40px; box-sizing: border-box; z-index: 1000;
+            position: fixed; /* Keep pinned to the screen during rotation */
+            bottom: 30px;    /* Pull up slightly from the very bottom */
+            left: 0;
+            width: 100%;
+            display: none;   /* Managed by setMode and checkOrientation */
+            justify-content: space-between;
+            padding: 0 40px;
+            box-sizing: border-box;
+            z-index: 9000;   /* Above canvas, below overlay */
+            pointer-events: none; /* Allows you to touch the game between buttons */
         }
         #btn-shield {
             background: rgba(0, 255, 255, 0.1);
@@ -52,10 +60,21 @@
             box-shadow: 0 0 20px #0ff;
 }
         .m-btn {
-            width: 70px; height: 70px; background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(0, 242, 255, 0.3); color: #0ff;
-            border-radius: 50%; font-family: inherit; font-size: 14px;
-            touch-action: none; user-select: none;
+            width: 75px; 
+            height: 75px; 
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(0, 242, 255, 0.3); 
+            color: #0ff;
+            border-radius: 50%; 
+            font-family: inherit; 
+            font-size: 12px;
+            touch-action: none; 
+            user-select: none;
+            pointer-events: auto; /* Re-enable touching for the actual buttons */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 0 0 10px #0ff;
         }
         .m-btn:active { background: rgba(0, 242, 255, 0.4); }
         @media (max-width: 900px) { #mobile-controls { display: flex; } }
