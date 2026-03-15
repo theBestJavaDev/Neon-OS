@@ -39,15 +39,15 @@
             }
         }
         #mobile-controls {
-            position: fixed; /* Keep pinned to the screen during rotation */
-            bottom: 30px;    /* Pull up slightly from the very bottom */
+            position: fixed !important; /* Keep pinned to the screen during rotation */
+            bottom: 40px !important;    /* Pull up slightly from the very bottom */
             left: 0;
             width: 100%;
             display: none;   /* Managed by setMode and checkOrientation */
             justify-content: space-between;
             padding: 0 40px;
             box-sizing: border-box;
-            z-index: 9000;   /* Above canvas, below overlay */
+            z-index: 9999 !important;   /* Above canvas, below overlay */
             pointer-events: none; /* Allows you to touch the game between buttons */
         }
         #btn-shield {
@@ -281,25 +281,36 @@
         // --- DEVICE ORIENTATION CHECK ---
         function checkOrientation() {
             const overlay = document.getElementById('rotate-overlay');
-            if (!overlay) return;
+            const controls = document.getElementById('mobile-controls');
+            if (!overlay || !controls) return;
 
-            // Use a small delay (250ms) to let the mobile browser finish rotating
+            // A slightly longer delay (300ms) helps mobile browsers finalize their 
+            // internal width/height math after the physical rotation animation ends.
             setTimeout(() => {
-                const isPortrait = window.innerHeight > window.innerWidth;
+                const isLandscape = window.innerWidth > window.innerHeight;
 
-                // Condition 1: Must be in shadows mode
-                // Condition 2: Must be in portrait
-                if (currentMode === 'shadows' && isPortrait) {
-                    overlay.style.display = 'flex';
-                } else {
-                    // Hide it if we rotate to landscape OR if we aren't in shadows
-                    overlay.style.display = 'none';
+                if (currentMode === 'shadows') {
+                    if (isLandscape) {
+                        // 1. Kill the overlay and force the buttons to appear
+                        overlay.style.setProperty('display', 'none', 'important');
+                        controls.style.setProperty('display', 'flex', 'important');
+                
+                        // 2. Refresh the game canvas size
+                        if (typeof resize === 'function') resize();
+                    } else {
+                        // 3. Show rotation warning and hide buttons
+                        overlay.style.setProperty('display', 'flex', 'important');
+                        controls.style.setProperty('display', 'none', 'important');
+                    }
                 }
-            }, 250); 
+            }, 300); 
         }
-        // Listen for screen flips and resizing
+
+        // Ensure these are at the very bottom of your script
+        window.removeEventListener('resize', checkOrientation); // Clean up old listeners
+        window.removeEventListener('orientationchange', checkOrientation);
         window.addEventListener('resize', checkOrientation);
-        window.addEventListener('orientationchange', checkOrientation);
+        window.addEventListener('orientationchange', checkOrientation);;
 
         // --- AMBIENCE ENGINES ---
         let silk_lines = Array.from({length: 12}, () => createSilkLine());
