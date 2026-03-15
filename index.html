@@ -6,6 +6,18 @@
     <title>NeonOS</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <style>
+        #mobile-controls {
+            position: absolute; bottom: 40px; width: 100%; display: none;
+            justify-content: space-between; padding: 0 40px; box-sizing: border-box; z-index: 1000;
+        }
+        .m-btn {
+            width: 70px; height: 70px; background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(0, 242, 255, 0.3); color: #0ff;
+            border-radius: 50%; font-family: inherit; font-size: 14px;
+            touch-action: none; user-select: none;
+        }
+        .m-btn:active { background: rgba(0, 242, 255, 0.4); }
+        @media (max-width: 900px) { #mobile-controls { display: flex; } }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Courier New', monospace; user-select: none; }
         
         /* --- ACCESS & OS SYSTEM --- */
@@ -121,6 +133,16 @@
         </div>
 
         <div id="shadows-container" class="canvas-container">
+            <div id="mobile-controls">
+                <div id="m-dpad">
+                    <button class="m-btn" id="m-left">←</button>
+                    <button class="m-btn" id="m-right">→</button>
+                </div>
+                <div id="m-actions">
+                    <button class="m-btn" id="m-jump">JUMP</button>
+                    <button class="m-btn" id="m-atk">ATK</button>
+                </div>
+            </div>
             <div id="game-hud">
                 <div class="g-label">BIOMETRIC STABILITY</div>
                 <div class="g-bar-container"><div id="g-hp-bar"></div></div>
@@ -347,6 +369,7 @@
                 ctx.fillStyle = "#0ff"; ctx.fillRect(-10, -1, 20, 2); ctx.restore();
             }
         }
+let slingStart = null, slingCurrent = null, isSlinging = false;
 
         class Player {
             constructor() {
@@ -411,6 +434,18 @@
             createSpark(x, y, count) { for (let i = 0; i < count; i++) particles.push(new Particle(x, y, "#0ff", false, true)); }
             draw(ctx) {
                 ctx.save(); ctx.translate(this.x - dCameraX + this.w / 2, this.y + this.h / 2);
+
+                // SLINGSHOT VISUAL LINE
+                if (isSlinging && slingStart && slingCurrent && this.grounded) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = "rgba(0, 255, 255, 0.4)";
+                    ctx.setLineDash([5, 5]);
+                    ctx.moveTo(0,0);
+                    ctx.lineTo(slingStart.x - slingCurrent.x, slingStart.y - slingCurrent.y);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+
                 if (this.shielding) { ctx.beginPath(); ctx.arc(0, 0, 60, 0, Math.PI*2); ctx.strokeStyle = "rgba(0, 255, 255, 0.5)"; ctx.lineWidth = 4; ctx.stroke(); ctx.fillStyle = "rgba(0, 255, 255, 0.1)"; ctx.fill(); }
                 if (this.bowDrawn) {
                     const angle = Math.atan2(dMouse.y - (this.y + this.h/2), (dMouse.x + dCameraX) - (this.x + this.w/2));
@@ -449,7 +484,7 @@
                 let d = player.x - this.x;
                 if (this.type === 'boss') {
                     if (this.x < WORLD_LIMIT - 1500) { this.vx += 0.8; }
-                    if (this.rodActive > 0) { this.rodActive--; if (Math.abs(d) < 1200 && dFrame % 5 === 0) { if (player.shielding) { player.stamina -= 2; } else { player.hp -= 40; player.vx = Math.sign(d) * 30; } dShake = 30; } } 
+                    if (this.rodActive > 0) { this.rodActive--; if (Math.abs(d) < 1200 && dFrame % 5 === 0) { if (player.shielding) { player.stamina -= 2; } else { player.hp -= 80; player.vx = Math.sign(d) * 30; } dShake = 30; } } 
                     else if (Math.abs(d) < 1000) { this.rodCharge++; if (this.rodCharge > 450) { this.rodCharge = 0; this.rodActive = 30; } }
                     this.vx += Math.sign(d) * 0.4;
                 }
@@ -466,16 +501,77 @@
                     dShake = 20;
                 }
             }
+            // --- UPDATED BOSS DRAWING (SILVER ARMOR) ---
             draw(ctx) {
-                if (this.hp <= 0) return; let sx = this.x - dCameraX; if (sx < -400 || sx > gameW + 400) return;
-                if (this.type === 'boss' && this.rodActive > 0) { ctx.fillStyle = "#fff"; ctx.shadowBlur = 40; ctx.shadowColor = "#f00"; ctx.fillRect(sx - 1000, this.y + this.h/2 - 15, 2000, 30); ctx.shadowBlur = 0; }
-                ctx.save(); ctx.translate(sx, this.y);
-                if (this.slashCharge > 25 || (this.type === 'boss' && this.rodCharge > 350)) { ctx.shadowBlur = 30; ctx.shadowColor = "#f00"; ctx.strokeStyle = "#f00"; ctx.lineWidth = 4; ctx.strokeRect(-10, -10, this.w + 20, this.h + 20); }
-                ctx.fillStyle = this.hitStun > 0 ? "#fff" : (this.type === 'sentinel' ? "#05050a" : "#0a0505"); ctx.fillRect(0, 0, this.w, this.h);
-                if (this.type === 'sentinel') { ctx.save(); ctx.translate(this.w/2, 30); let baseAngle = (this.isSlashing > 0) ? -1.5 + (1 - (this.isSlashing / 25)) * 3.0 : -1.5; ctx.rotate(baseAngle); ctx.fillStyle = this.slashCharge > 20 ? "#f00" : "#333"; ctx.fillRect(0, -3, 70, 6); ctx.restore(); }
-                ctx.fillStyle = "#f00"; let eyePulse = Math.sin(dFrame * 0.1) * 2;
-                if (this.type === 'goliath' || this.type === 'boss') { ctx.fillRect(this.w * 0.2, 20, 10 + eyePulse, 5); ctx.fillRect(this.w * 0.7, 20, 10 + eyePulse, 5); } else { ctx.fillRect(this.w/2 - 5, 20, 10 + eyePulse, 5); }
-                ctx.fillStyle = "#111"; ctx.fillRect(0, -15, this.w, 8); ctx.fillStyle = "#f00"; ctx.fillRect(0, -15, this.w * (this.hp / this.maxHp), 8); ctx.restore();
+                if (this.hp <= 0) return; 
+                let sx = this.x - dCameraX; 
+                if (sx < -400 || sx > gameW + 400) return;
+                // --- BOSS BEAM TELEGRAPH (THE WARNING) ---
+                if (this.type === 'boss' && this.rodCharge > 200) {
+                    let sx = this.x - dCameraX;
+                    let chargeRatio = (this.rodCharge - 200) / 250; // 0 to 1 as it charges
+    
+                    ctx.save();
+                    // Flickering effect: more intense as charge increases
+                    ctx.globalAlpha = (Math.random() > 0.5 ? 0.2 : 0.4) * chargeRatio;
+                    ctx.strokeStyle = "#f00";
+                    ctx.lineWidth = 2 + (chargeRatio * 5); // Line gets thicker
+    
+                    ctx.beginPath();
+                    ctx.setLineDash([10, 15]); // Dashed line for "targeting" feel
+                    ctx.moveTo(sx - 1500, this.y + this.h/2);
+                    ctx.lineTo(sx + 1500, this.y + this.h/2);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // Special Boss Aura
+                if (this.type === 'boss' && this.rodActive > 0) {
+                    ctx.fillStyle = "#fff"; 
+                    ctx.shadowBlur = 40; ctx.shadowColor = "#f00";
+                    ctx.fillRect(sx - 1000, this.y + this.h/2 - 15, 2000, 30);
+                    ctx.shadowBlur = 0;
+                }
+
+                ctx.save(); 
+                ctx.translate(sx, this.y);
+
+                if (this.type === 'boss') {
+                    // --- METALLIC ARMOR GRADIENT ---
+                    let silverGrad = ctx.createLinearGradient(0, 0, this.w, this.h);
+                    silverGrad.addColorStop(0, "#777");
+                    silverGrad.addColorStop(0.2, "#eee"); // The "shine"
+                    silverGrad.addColorStop(0.5, "#999");
+                    silverGrad.addColorStop(0.8, "#fff"); // Reflection
+                    silverGrad.addColorStop(1, "#444");
+        
+                    ctx.fillStyle = this.hitStun > 0 ? "#fff" : silverGrad;
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = "rgba(255, 255, 255, 0.3)";
+                    ctx.fillRect(0, 0, this.w, this.h);
+        
+                    // Armor "Rivets"
+                    ctx.fillStyle = "rgba(0,0,0,0.2)";
+                    for(let i=0; i<4; i++) ctx.fillRect(5, 10 + (i*40), 4, 4);
+                } else {
+                    ctx.fillStyle = this.hitStun > 0 ? "#fff" : (this.type === 'sentinel' ? "#05050a" : "#0a0505");
+                    ctx.fillRect(0, 0, this.w, this.h);
+                }
+
+                // Eye Logic
+                ctx.fillStyle = "#f00"; 
+                let eyePulse = Math.sin(dFrame * 0.1) * 2;
+                if (this.type === 'goliath' || this.type === 'boss') {
+                    ctx.fillRect(this.w * 0.2, 20, 10 + eyePulse, 5);
+                    ctx.fillRect(this.w * 0.7, 20, 10 + eyePulse, 5);
+                } else {
+                    ctx.fillRect(this.w/2 - 5, 20, 10 + eyePulse, 5);
+                }
+
+                // Health Bar
+                ctx.fillStyle = "#111"; ctx.fillRect(0, -15, this.w, 8);
+                ctx.fillStyle = "#f00"; ctx.fillRect(0, -15, this.w * (this.hp / this.maxHp), 8);
+                ctx.restore();
             }
         }
 
@@ -515,11 +611,53 @@
 
         function initDescentGame() {
             if (!dListenersAdded) {
+                // Inside initDescentGame() 
+                const bindBtn = (id, key) => {
+                    const btn = document.getElementById(id);
+                    if (!btn) return;
+                    btn.addEventListener('touchstart', (e) => { e.preventDefault(); dKeys[key] = true; });
+                    btn.addEventListener('touchend', (e) => { e.preventDefault(); dKeys[key] = false; });
+                };
+
+                bindBtn('m-left', 'KeyA');
+                bindBtn('m-right', 'KeyD');
+                bindBtn('m-jump', 'KeyW');
+                bindBtn('m-atk', 'Space');
+                // DESKTOP CONTROLS
                 window.addEventListener('keydown', e => dKeys[e.code] = true);
                 window.addEventListener('keyup', e => dKeys[e.code] = false);
                 canvases.shadows.addEventListener('mousemove', e => { dMouse.x = e.clientX; dMouse.y = e.clientY; });
                 canvases.shadows.addEventListener('mousedown', () => { dMouse.clicked = true; });
                 canvases.shadows.addEventListener('mouseup', () => { dMouse.clicked = false; });
+                
+                // MOBILE / TOUCH CONTROLS INJECTED HERE
+                canvases.shadows.addEventListener('pointerdown', e => {
+                    if (e.clientX < window.innerWidth / 2) { 
+                        // Left side: Slingshot Jump/Move
+                        slingStart = {x: e.clientX, y: e.clientY}; 
+                        slingCurrent = {x: e.clientX, y: e.clientY}; 
+                        isSlinging = true; 
+                    } else {
+                        // Right side: Tap to Shoot
+                        if (playerPlayer && playerPlayer.stamina >= 12) {
+                            const angle = Math.atan2(e.clientY - (playerPlayer.y + playerPlayer.h/2), (e.clientX + dCameraX) - (playerPlayer.x + playerPlayer.w/2));
+                            arrows.push(new Arrow(playerPlayer.x + playerPlayer.w/2, playerPlayer.y + playerPlayer.h/2, angle));
+                            playerPlayer.stamina -= 12; dShake = 7;
+                        }
+                    }
+                });
+                canvases.shadows.addEventListener('pointermove', e => { 
+                    if (isSlinging) slingCurrent = {x: e.clientX, y: e.clientY}; 
+                });
+                window.addEventListener('pointerup', () => {
+                    if (isSlinging && playerPlayer && playerPlayer.grounded) {
+                        let dx = slingStart.x - slingCurrent.x, dy = slingStart.y - slingCurrent.y;
+                        playerPlayer.vx = dx * 0.15; playerPlayer.vy = dy * 0.15; 
+                        playerPlayer.grounded = false; playerPlayer.createDust(8);
+                    }
+                    isSlinging = false;
+                });
+                
                 dListenersAdded = true;
             }
             
@@ -547,7 +685,7 @@
             bloodDecals.forEach(b => { ctx.fillStyle = "#300"; ctx.fillRect(b.x - dCameraX, gameH - GROUND_Y, b.w, 5); });
             lamps.forEach(l => l.draw(ctx));
             if (masterKey && !playerPlayer.hasKey) { ctx.fillStyle = "#ff0"; ctx.shadowBlur = 20; ctx.shadowColor = "#ff0"; ctx.fillRect(masterKey.x - dCameraX - 5, masterKey.y - 10, 10, 20); ctx.shadowBlur = 0; }
-            let coreX = WORLD_LIMIT - dCameraX; ctx.fillStyle = "#0ff"; ctx.shadowBlur = 50; ctx.shadowColor = "#0ff"; ctx.fillRect(coreX - 100, 0, 100, gameH); ctx.shadowBlur = 0;
+            let coreX = WORLD_LIMIT - dCameraX; ctx.fillStyle = "#0ff"; ctx.shadowBlur = 50; ctx.shadowColor = "#0ff"; ctx.fillRect(coreX - 100, 0, gameW, gameH); ctx.shadowBlur = 0;
         }
 
         function drawLighting(ctx) {
@@ -578,7 +716,7 @@
                 dFrame++; const c = ctxs.shadows;
                 if (dShake > 0) { c.save(); c.translate((Math.random()-0.5)*dShake, (Math.random()-0.5)*dShake); dShake *= 0.9; }
                 drawAtmosphere(c); crystals.forEach(cr => cr.draw(c));
-                arrows = arrows.filter(a => a.active && a.life > 0); arrows.forEach(a => { a.update(); a.draw(c); });
+                arrows = arrows.filter(a => a.active !== false && a.life > 0); arrows.forEach(a => { a.update(); a.draw(c); });
                 enemies.forEach(e => { e.update(playerPlayer); e.draw(c); });
                 playerPlayer.update(); playerPlayer.draw(c);
                 particles = particles.filter(p => p.life > 0); particles.forEach(p => { p.update(); p.draw(c); });
