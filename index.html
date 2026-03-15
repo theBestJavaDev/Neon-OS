@@ -10,6 +10,15 @@
             position: absolute; bottom: 40px; width: 100%; display: none;
             justify-content: space-between; padding: 0 40px; box-sizing: border-box; z-index: 1000;
         }
+        #btn-shield {
+            background: rgba(0, 255, 255, 0.1);
+            border: 2px solid #0ff;
+            /* Position it near your attack button or in a central spot */
+        }
+        #btn-shield:active {
+            background: rgba(0, 255, 255, 0.6);
+            box-shadow: 0 0 20px #0ff;
+}
         .m-btn {
             width: 70px; height: 70px; background: rgba(255,255,255,0.05);
             border: 1px solid rgba(0, 242, 255, 0.3); color: #0ff;
@@ -141,6 +150,7 @@
                 <div id="m-actions">
                     <button class="m-btn" id="m-jump">JUMP</button>
                     <button class="m-btn" id="m-atk">ATK</button>
+                    <button id="btn-shield" class="m-btn">SHLD</button>
                 </div>
             </div>
             <div id="game-hud">
@@ -202,7 +212,7 @@
         // --- MAIN OS SETUP ---
         function initMainOS() { 
             // Add to your initMainOS function
-            document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=device-width, initial-scale=0.65, maximum-scale=0.8, user-scalable=0');
+            document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=device-width, initial-scale=0.8, maximum-scale=0.8, user-scalable=0');
             document.getElementById('main-os').style.display = 'block'; 
             resize(); setupRain(); setupRipple(); setupOcean(); initDescentGame(); loop(); 
         }
@@ -612,6 +622,19 @@ let slingStart = null, slingCurrent = null, isSlinging = false;
         }
 
         function initDescentGame() {
+            const shieldBtn = document.getElementById('btn-shield');
+            if (shieldBtn) {
+            // When the user touches the button, set KeyS to true
+            shieldBtn.addEventListener('touchstart', (e) => { 
+                e.preventDefault(); 
+                dKeys['KeyS'] = true; 
+            });
+            // When they lift their finger, set KeyS to false
+            shieldBtn.addEventListener('touchend', (e) => { 
+                e.preventDefault(); 
+                dKeys['KeyS'] = false; 
+            });
+            }
             if (!dListenersAdded) {
                 // Inside initDescentGame() 
                 const bindBtn = (id, key) => {
