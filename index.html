@@ -448,7 +448,7 @@
         let gameW, gameH;
         const GRAVITY = 0.75; const FRICTION = 0.84; const GROUND_Y = 140; const WORLD_LIMIT = 50000;
         let dCameraX = 0, dShake = 0, dFrame = 0, dKeys = {}, dMouse = { x: 0, y: 0, clicked: false };
-        let particles = [], arrows = [], bloodDecals = [], crystals = [], enemies = [], lamps = [];
+        let particles = [], /*arrows = [], */bloodDecals = [], crystals = [], enemies = [], lamps = [];
         let masterKey = null, dHasWon = false;
 
         class Arrow {
@@ -489,7 +489,7 @@ let slingStart = null, slingCurrent = null, isSlinging = false;
                     this.stamina = Math.max(0, this.stamina - 0.5); this.vx *= 0.3;
                     if (dMouse.clicked && dFrame % 15 === 0 && this.stamina >= 12) {
                         const angle = Math.atan2(dMouse.y - (this.y + this.h/2), (dMouse.x + dCameraX) - (this.x + this.w/2));
-                        arrows.push(new Arrow(this.x + this.w/2, this.y + this.h/2, angle));
+                        //arrows.push(new Arrow(this.x + this.w/2, this.y + this.h/2, angle));
                         this.stamina -= 12; dShake = 7;
                     }
                 } else if (this.state !== 'slash') { this.stamina = Math.min(100, this.stamina + 0.5); }
@@ -703,7 +703,7 @@ let slingStart = null, slingCurrent = null, isSlinging = false;
             
             // Reset global variables and clear arrays
             dCameraX = 0; dShake = 0; dFrame = 0;
-            particles = []; arrows = []; bloodDecals = []; crystals = []; enemies = []; lamps = [];
+            particles = []; /*arrows */= []; bloodDecals = []; crystals = []; enemies = []; lamps = [];
             stalactites.length = 0; masterKey = null; dHasWon = false;
             
             // Re-initialize the world and player
@@ -755,7 +755,7 @@ let slingStart = null, slingCurrent = null, isSlinging = false;
                         // Right side: Tap to Shoot
                         if (playerPlayer && playerPlayer.stamina >= 12) {
                             const angle = Math.atan2(e.clientY - (playerPlayer.y + playerPlayer.h/2), (e.clientX + dCameraX) - (playerPlayer.x + playerPlayer.w/2));
-                            arrows.push(new Arrow(playerPlayer.x + playerPlayer.w/2, playerPlayer.y + playerPlayer.h/2, angle));
+                            //arrows.push(new Arrow(playerPlayer.x + playerPlayer.w/2, playerPlayer.y + playerPlayer.h/2, angle));
                             playerPlayer.stamina -= 12; dShake = 7;
                         }
                     }
@@ -830,7 +830,7 @@ let slingStart = null, slingCurrent = null, isSlinging = false;
                 dFrame++; const c = ctxs.shadows;
                 if (dShake > 0) { c.save(); c.translate((Math.random()-0.5)*dShake, (Math.random()-0.5)*dShake); dShake *= 0.9; }
                 drawAtmosphere(c); crystals.forEach(cr => cr.draw(c));
-                arrows = arrows.filter(a => a.active !== false && a.life > 0); arrows.forEach(a => { a.update(); a.draw(c); });
+                //arrows = arrows.filter(a => a.active !== false && a.life > 0); arrows.forEach(a => { a.update(); a.draw(c); });
                 enemies.forEach(e => { e.update(playerPlayer); e.draw(c); });
                 playerPlayer.update(); playerPlayer.draw(c);
                 particles = particles.filter(p => p.life > 0); particles.forEach(p => { p.update(); p.draw(c); });
