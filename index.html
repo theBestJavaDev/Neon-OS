@@ -1054,7 +1054,7 @@
                 rain_drops.forEach(d => { ctxs.rain.fillText(Math.round(Math.random()), d.x, d.y); d.y += d.s; if(d.y > canvases.rain.height) d.y = -40; });
             } else if (currentMode === 'lava') {
                 ctxs.lava.fillStyle = "#0f051d"; ctxs.lava.fillRect(0,0,canvases.lava.width, canvases.lava.height);
-                lava_b.forEach(b => { b.; ctxs.lava.beginPath(); ctxs.lava.arc(b.x, b.y, b.r, 0, Math.PI*2); ctxs.lava.fillStyle = "#ff4500"; ctxs.lava.fill(); });
+                lava_b.forEach(b => { b.update(); ctxs.lava.beginPath(); ctxs.lava.arc(b.x, b.y, b.r, 0, Math.PI*2); ctxs.lava.fillStyle = "#ff4500"; ctxs.lava.fill(); });
             } else if (currentMode === 'silk') {
                 ctxs.silk.clearRect(0,0,canvases.silk.width, canvases.silk.height);
                 ghostTrails.forEach((g, i) => { ctxs.silk.beginPath(); ctxs.silk.strokeStyle = g.c; ctxs.silk.globalAlpha = g.o; g.s.forEach((p, j) => j===0 ? ctxs.silk.moveTo(p.x, p.y) : ctxs.silk.lineTo(p.x, p.y)); ctxs.silk.stroke(); g.o -= 0.004; if(g.o <= 0) ghostTrails.splice(i,1); });
