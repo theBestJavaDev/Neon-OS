@@ -325,7 +325,16 @@
                 }
             };
         }
-        let lava_b = Array.from({length: 15}, () => ({ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, r: Math.random() * 70 + 40, vy: Math.random() * 0.8 + 0.4,  { this.y -= this.vy; if(this.y < -this.r*2) this.y = window.innerHeight + this.r; } }));
+        let lava_b = Array.from({length: 15}, () => ({ 
+            x: Math.random() * window.innerWidth, 
+            y: Math.random() * window.innerHeight, 
+            r: Math.random() * 70 + 40, 
+            vy: Math.random() * 0.8 + 0.4, 
+            update() { 
+                this.y -= this.vy; 
+                if(this.y < -this.r*2) this.y = window.innerHeight + this.r; 
+            } 
+        }));        
         let rain_drops = [];
         function setupRain() { rain_drops = []; for(let i=0; i<window.innerWidth; i+=25) rain_drops.push({ x: i, y: Math.random() * -window.innerHeight, s: Math.random() * 6 + 3 }); }
         let ripple_grid = [];
