@@ -487,10 +487,13 @@ let slingStart = null, slingCurrent = null, isSlinging = false;
                     this.stamina = Math.max(0, this.stamina - 0.5); this.vx *= 0.5;
                 } else if (this.bowDrawn) {
                     this.stamina = Math.max(0, this.stamina - 0.5); this.vx *= 0.3;
-                    if (dMouse.clicked && dFrame % 15 === 0 && this.stamina >= 12) {
+                    // Only fire if the bow is drawn AND the mouse was clicked this frame
+                    if (this.bowDrawn && dMouse.clicked && this.stamina >= 12) {
                         const angle = Math.atan2(dMouse.y - (this.y + this.h/2), (dMouse.x + dCameraX) - (this.x + this.w/2));
                         arrows.push(new Arrow(this.x + this.w/2, this.y + this.h/2, angle));
-                        this.stamina -= 12; dShake = 7;
+                        this.stamina -= 12; 
+                        dShake = 7;
+                        dMouse.clicked = false; // Reset click immediately so it doesn't "double fire"
                     }
                 } else if (this.state !== 'slash') { this.stamina = Math.min(100, this.stamina + 0.5); }
 
