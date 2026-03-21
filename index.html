@@ -499,7 +499,7 @@
                 // Apply antigravity if in chamber
                 let gravity = GRAVITY;
                 if (this.x >= ANTIGRAVITY_START && this.x <= ANTIGRAVITY_END) {
-                    gravity = 0.25; // Reduce gravity for floating effect
+                    gravity = 0.3; // Reduce gravity for floating effect
                 }
         
                 if (this.shielding) {
@@ -965,7 +965,11 @@
     
             // Spawn three guardians in antigravity chamber
             enemies.push(new Guardian(ANTIGRAVITY_START + 5000));
+            enemies.push(new Guardian(ANTIGRAVITY_START + 7500));
+            enemies.push(new Guardian(ANTIGRAVITY_START + 10000));
             enemies.push(new Guardian(ANTIGRAVITY_START + 12500));
+            enemies.push(new Guardian(ANTIGRAVITY_START + 15000));
+            enemies.push(new Guardian(ANTIGRAVITY_START + 17500));
             enemies.push(new Guardian(ANTIGRAVITY_START + 20000));
     
             // Boss at the end
